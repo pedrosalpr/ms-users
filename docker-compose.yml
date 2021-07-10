@@ -1,0 +1,50 @@
+version: "3.8"
+services:
+  db:
+    image: mysql:latest
+    # command: --default-authentication-plugin=mysql_native_password # needed as of mysql 8
+    container_name: "ms_users_mysql"
+    entrypoint: [
+      '/entrypoint.sh',
+      '--default-authentication-plugin=mysql_native_password',
+      '--bind-address=0.0.0.0',
+      '--default-time-zone=America/Sao_Paulo',
+    ]
+    environment:
+      MYSQL_ROOT_PASSWORD: "1q2w3e4r"
+    ports:
+      - "3306:3306"
+    volumes:
+      - .docker-volumes/mysql:/var/lib/mysql
+      - .setup/build/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  cache:
+    image: redis:6.2-alpine
+    container_name: "ms_users_redis"
+    ports:
+      - "6379:6379"
+    volumes:
+      - .docker-volumes/redis:/data
+
+  app:
+    image: ms_users_app:latest
+    build:
+      context: ./
+      dockerfile: .setup/build/php/Dockerfile
+    container_name: "ms_users_app"
+    command: "php -S 0.0.0.0:8011 -t /var/www/html/public"
+    ports:
+        - "8011:8011"
+    links:
+      - db
+      - cache
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - db
+      - cache
+
+networks:
+  default:
+    external: true
+    name: microservice_external
