@@ -16,10 +16,19 @@
         "barryvdh/laravel-debugbar": "^3.6",
         "facade/ignition": "^2.5",
         "fakerphp/faker": "^1.9.1",
+        "friendsofphp/php-cs-fixer": "^3.0",
         "laravel/sail": "^1.0.1",
         "mockery/mockery": "^1.4.2",
         "nunomaduro/collision": "^5.0",
-        "phpunit/phpunit": "^9.3.3"
+        "phpcheckstyle/phpcheckstyle": "^0.14.8",
+        "phploc/phploc": "^7.0",
+        "phpmd/phpmd": "^2.10",
+        "phpmetrics/phpmetrics": "^2.7",
+        "phpstan/phpstan-deprecation-rules": "^0.12.6",
+        "phpunit/phpunit": "^9.3.3",
+        "roave/security-advisories": "dev-latest",
+        "sensiolabs/security-checker": "^6.0",
+        "theseer/phpdox": "master"
     },
     "autoload": {
         "psr-4": {
@@ -46,7 +55,56 @@
         ],
         "test": [
             "./vendor/bin/phpunit --no-coverage --testdox"
-        ]
+        ],
+        "php-report": [
+            "@php-dox-full",
+            "@php-metrics",
+            "@php-doc",
+            "@report-index"
+        ],
+        "php-dox-full": [
+            "@rebuild-folder-doc",
+            "@php-unit",
+            "@php-md",
+            "@php-cs-checkstyle",
+            "@php-cs-xml",
+            "@php-loc",
+            "@php-dox"
+        ],
+        "rebuild-folder-doc": [
+            "rm -rf ./doc/build/phpdox/",
+            "mkdir -p ./doc/build/phpdox/api",
+            "mkdir -p ./doc/build/phpdox/logs",
+            "mkdir -p ./doc/build/phpdox/logs/coverage",
+            "mkdir -p ./doc/build/phpdox/logs/checkstyle",
+            "mkdir -p ./doc/build/phpdoc",
+            "mkdir -p ./doc/build/phpmetrics"
+        ],
+        "php-dox": [
+            "php vendor/bin/phpdox"
+        ],
+        "php-loc": [
+            "php ./vendor/bin/phploc ./app --log-xml doc/build/phpdox/logs/phploc.xml --count-tests"
+        ],
+        "php-md": "./vendor/phpmd/phpmd/src/bin/phpmd ./app xml ./phpmd.xml --ignore-violations-on-exit  --reportfile doc/build/phpdox/logs/pmd.xml",
+        "php-cs-checkstyle": [
+            "sh scripts/phpcs.sh",
+            "php scripts/phpcs.phar --runtime-set ignore_warnings_on_exit true --runtime-set ignore_errors_on_exit true --colors --report=checkstyle --report-file=doc/build/phpdox/logs/checkstyle.xml --standard=PSR2 ./app"
+        ],
+        "php-cs-xml": [
+            "sh scripts/phpcs.sh",
+            "php scripts/phpcs.phar --runtime-set ignore_warnings_on_exit true --runtime-set ignore_errors_on_exit true --colors --report=xml --report-file=doc/build/phpdox/logs/phpcs.xml --standard=PSR2 ./app"
+        ],
+        "php-unit": "./vendor/phpunit/phpunit/phpunit --colors=always --log-junit doc/build/phpdox/logs/coverage/xml/index.xml",
+        "php-metrics": "./vendor/phpmetrics/phpmetrics/bin/phpmetrics --report-html=doc/build/phpmetrics --report-violations=doc/build/phpmetrics/violations.xml --junit=doc/build/phpdox/logs/coverage/xml/index.xml src ./app",
+        "php-doc": [
+            "sh scripts/phpdoc.sh",
+            "php scripts/phpDocumentor.phar -d ./app -t ./doc/build/phpdoc --title 'Microservice User' "
+        ],
+        "php-checkstyle": "php ./vendor/phpcheckstyle/phpcheckstyle/run.php --src ./app --format xml --outdir ./doc/build/phpdox/logs/checkstyle --config ./checkstyle.cfg.xml  --linecount  ",
+        "phplint-cs":  "php scripts/phpcs.phar --colors --standard=PSR2 ./app",
+        "phplint-md": "./vendor/phpmd/phpmd/src/bin/phpmd ./app xml ./phpmd.xml",
+        "report-index": "sh create-index-report.sh"
     },
     "extra": {
         "laravel": {

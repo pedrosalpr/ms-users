@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Users;
 
 use App\Entities\UserType;
 use App\Enums\Config\Routes;
